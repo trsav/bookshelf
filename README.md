@@ -1,12 +1,17 @@
-# Bookshelf CLI
+# ```BOOKSHELF```
+
+<p align="center">
+<img width="400" alt="bookshelf" src="https://github.com/user-attachments/assets/e034879b-be90-4f6a-b158-ec492f3ab8fd">
+</p>
 
 A terminal-based book management system with an intuitive interface. Track reading progress, add books, and manage a book collection from the command line.
 
 ## Features
 
-- Add books via Google Books API search
-- Track reading status (Unread, In Progress, Finished)
-- Interactive scrolling view with context
+- Add books via Google Books API search.
+- Add specific edition, or edit information.
+- Track reading status (Unread, In Progress, Finished).
+- Interactive scrolling view or view overall bookshelf.
 
 ## Installation
 
@@ -46,24 +51,4 @@ books scroll # Interactive scroll view
 - 2: Mark as In Progress
 - 3: Mark as Finished
 - Q: Quit
-
-## Demo
-
-```
-WE DON'T KNOW WHAT WE'RE DOING
- - ADRIAN CHILES
-Status: unread
-ISBN: 9780751538700
-Book 1 of 72
-─────────────────────────────────────────────────────────────────────────────────
-1000 YEARS OF JOYS AND SORROWS
- - AI WEIWEI
-Status: finished
-ISBN: 9780553419481
-─────────────────────────────────────────────────────────────────────────────────
-A CHOICE OF SHAKESPEARE'S VERSE
- - WILLIAM SHAKESPEARE
-Status: unread
-ISBN: 9780571262250
-```
 
