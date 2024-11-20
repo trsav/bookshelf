@@ -304,17 +304,13 @@ def scroll():
         prev_idx, next_idx = get_adjacent_indices(current_idx)
 
         display_book_info(books[prev_idx], 'dim')
-        click.echo()
-
         click.secho(f"Book {current_idx + 1} of {len(books)}", fg='blue')
         click.echo("─" * term_width)
         display_book_info(books[current_idx], 'normal')
-        click.echo("\n" + "─" * term_width)
-
-        click.echo()
+        click.echo("─" * term_width)
         display_book_info(books[next_idx], 'dim')
 
-        click.echo("\nControls:")
+        click.echo("Controls:")
         controls = "↑/↓ or j/k: Navigate • 1: Unread • 2: In Progress • 3: Finished • D: Delete Book • Q: Quit"
         if len(controls) > term_width:
             controls = "↑/↓: Nav • 1:Unread • 2:Progress • 3:Done • Q:Quit • D:Delete"
