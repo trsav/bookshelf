@@ -43,6 +43,7 @@ Now you can just type `books scroll` or `books add` from anywhere. Use `books ed
 books add    # Add new books
 books view   # View library
 books scroll # Interactive scroll view
+books edit   # Edit books in library
 ```
 
 ### Scroll View Controls
