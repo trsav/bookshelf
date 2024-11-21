@@ -35,7 +35,7 @@ uv pip install -r requirements.txt
 echo 'alias books="cd /path/to/bookshelf && source .venv/bin/activate && python cli.py"' >> ~/.bashrc
 source ~/.bashrc
 ```
-Now you can just type `books scroll` or `books add` from anywhere.
+Now you can just type `books scroll` or `books add` from anywhere. Use `books edit` to edit existing books.
 
 ## Usage
 
@@ -43,6 +43,7 @@ Now you can just type `books scroll` or `books add` from anywhere.
 books add    # Add new books
 books view   # View library
 books scroll # Interactive scroll view
+books edit   # Edit books in library
 ```
 
 ### Scroll View Controls
