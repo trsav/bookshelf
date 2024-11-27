@@ -42,4 +42,4 @@ for i in range(len(permutation)):
         alpha=0.75
     )
 
-plt.savefig('embedding/tsp_solution.png',dpi=600)
+plt.savefig('embedding/tsp.png',dpi=600)

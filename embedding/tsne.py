@@ -41,10 +41,10 @@ for book in books:
     book_list.append(book)
 print(book_list)
 
-tsne = TSNE(n_components=2, perplexity=10, random_state=42, init="random", learning_rate='auto')
+tsne = TSNE(n_components=2, perplexity=8, random_state=10, n_iter=10000)
 X = tsne.fit_transform(matrix)
 
-def plot_embeddings_with_balanced_arrows(x_coords, y_coords, labels, figsize=(11,10)):
+def plot_embeddings_with_balanced_arrows(x_coords, y_coords, labels, figsize=(11,8)):
     """
     Create an embedding plot with balanced arrow directions
     """
@@ -103,5 +103,5 @@ fig, ax = plot_embeddings_with_balanced_arrows(
 with open('embedding/tsne_embeddings.pkl','wb') as f:
     pickle.dump(embeddings_df,f)
 
-plt.savefig('embedding/tsne.png',dpi=700)
+plt.savefig('embedding/tsne.png',dpi=300)
 
