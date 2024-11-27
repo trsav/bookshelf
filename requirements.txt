@@ -7,3 +7,4 @@ python-dotenv
 seaborn
 adjustText
 pandas
+python-tsp

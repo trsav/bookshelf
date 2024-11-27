@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # read from bookshelf.db, each row is a separate dictionary
-bookshelf_loc = 'embedding/bookshelf.db'
+bookshelf_loc = 'bookshelf.db'
 conn = sqlite3.connect(bookshelf_loc)
 c = conn.cursor()
 c.execute('SELECT * FROM books')

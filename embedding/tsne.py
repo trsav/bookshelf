@@ -6,10 +6,14 @@ import sqlite3
 import pandas as pd
 from adjustText import adjust_text
 
+# matplotlib font
+
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = 'Helvetica'
+
 with open('embedding/pickled_embeddings.pkl', 'rb') as f:
     res = pickle.load(f)
 
-# read 
 
 embeddings = []
 for r in res.data:
@@ -17,13 +21,13 @@ for r in res.data:
 
 matrix = np.array(embeddings)
 
-conn = sqlite3.connect('embedding/bookshelf.db')
+conn = sqlite3.connect('bookshelf.db')
 c = conn.cursor()
 c.execute('SELECT * FROM books')
 books = c.fetchall()
 conn.close()
 # get headers
-conn = sqlite3.connect('embedding/bookshelf.db')
+conn = sqlite3.connect('bookshelf.db')
 c = conn.cursor()
 c.execute('PRAGMA table_info(books)')
 headers = c.fetchall()
@@ -95,5 +99,9 @@ fig, ax = plot_embeddings_with_balanced_arrows(
     embeddings_df['y'],
     embeddings_df['label']
 )
+
+with open('embedding/tsne_embeddings.pkl','wb') as f:
+    pickle.dump(embeddings_df,f)
+
 plt.savefig('embedding/tsne.png',dpi=700)
 

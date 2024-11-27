@@ -5,6 +5,43 @@ import os
 from typing import List, Dict
 from datetime import datetime
 
+def get_terminal_size():
+    try:
+        return os.get_terminal_size()
+    except OSError:
+        return os.terminal_size((80, 24))
+
+def wrap_text(text: str, width: int, subsequent_indent: str = '') -> str:
+    """Wrap text to specified width with support for subsequent line indentation"""
+    if not text:
+        return text
+        
+    words = text.split()
+    lines = []
+    current_line = []
+    current_length = 0
+    
+    for word in words:
+        # Check if adding this word would exceed the width
+        if current_line and current_length + len(word) + 40 > width:
+            # Join current line and add it to lines
+            lines.append(' '.join(current_line))
+            # Start new line with indentation
+            current_line = [word]
+            current_length = len(subsequent_indent) + len(word)
+        else:
+            current_line.append(word)
+            # Add 1 for the space between words
+            current_length += len(word) + (1 if current_line else 0)
+    
+    # Add the last line
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    # Join lines with newline and proper indentation
+    return '\n'.join([lines[0]] + [subsequent_indent + line for line in lines[1:]])
+
+
 class BookManager:
     def __init__(self, db_path="bookshelf.db"):
         self.conn = sqlite3.connect(db_path)
@@ -24,11 +61,13 @@ class BookManager:
                 format TEXT,
                 language TEXT,
                 page_count INTEGER,
+                description TEXT,
                 read_status TEXT DEFAULT 'unread',
                 date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         self.conn.commit()
+
 
     def edit_book_field(self, book_id: int, field: str, value: str):
         """Edit a specific field of a book"""
@@ -168,9 +207,9 @@ class BookManager:
         cursor.execute('''
             INSERT INTO books (
                 title, author, isbn, publisher, publication_year,
-                edition, format, language, page_count, read_status
+                edition, format, language, page_count, description, read_status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'unread')
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unread')
         ''', (
             book['title'],
             book['author'],
@@ -180,7 +219,8 @@ class BookManager:
             book.get('edition', ''),
             book.get('format', ''),
             book.get('language', 'en'),
-            book.get('page_count', 0)
+            book.get('page_count', 0),
+            book.get('description', 'NA')
         ))
         self.conn.commit()
         return cursor.lastrowid
@@ -209,7 +249,7 @@ class BookManager:
         order_clause = 'CASE read_status WHEN "finished" THEN 1 WHEN "in_progress" THEN 2 ELSE 3 END, ' if sort_by_status else ''
         cursor.execute(f'''
             SELECT id, title, author, isbn, publisher, publication_year,
-                   edition, format, language, page_count, read_status
+                edition, format, language, page_count, description, read_status
             FROM books
             ORDER BY {order_clause}title
         ''')
@@ -236,11 +276,6 @@ def scroll():
     books = manager.get_books()
     current_idx = 0
 
-    def get_terminal_size():
-        try:
-            return os.get_terminal_size()
-        except OSError:
-            return os.terminal_size((80, 24))
 
     def get_status_color(status):
         return {
@@ -258,20 +293,19 @@ def scroll():
     def display_book_info(book, style='normal'):
         """Display book info with given style (normal or dim)"""
         color = 'white' if style == 'normal' else 'bright_black'
-        indent = ""
-        term_width = get_terminal_size().columns
-        avail_width = term_width - len(indent)
+        indent = "   "  # Base indentation
+        term_width = get_terminal_size().columns - len(indent)  # Account for base indent
 
         # Unpack all book details
-        id_, title, author, isbn, publisher, year, edition, format_, language, pages, status = book
+        id_, title, author, isbn, publisher, year, edition, format_, language, pages, description, status = book
 
-        # Format title and author with ellipsis if too long
-        title = title[:avail_width-3] + "..." if len(title) > avail_width else title
-        author = author[:avail_width-3] + "..." if len(author) > avail_width else author
-
-        # Display main info
-        click.secho(f"{indent}{title}", fg=color, bold=(style == 'normal'))
-        click.secho(f"{indent} - {author}", fg=color)
+        # Format and wrap title
+        title = wrap_text(title, term_width)
+        click.secho(f"{title}", fg=color, bold=(style == 'normal'))
+        
+        # Format and wrap author
+        author = wrap_text(f" - {author}", term_width)
+        click.secho(f"{author}", fg=color)
 
         # Display edition info
         edition_info = []
@@ -286,13 +320,20 @@ def scroll():
 
         if edition_info:
             edition_str = " • ".join(filter(None, edition_info))
-            click.secho(f"{indent}{edition_str}", fg=color)
+            edition_wrapped = wrap_text(edition_str, term_width)
+            click.secho(f"{edition_wrapped}", fg=color)
 
         # Display additional details
         if pages:
             click.secho(f"{indent}Pages: {pages}", fg=color)
         if language:
             click.secho(f"{indent}Language: {language.upper()}", fg=color)
+        
+        # Add description display with wrapping
+        if description and description != 'NA' and style == 'normal':
+            desc_text = description[:300] + "..." if len(description) > 300 else description
+            wrapped_desc = wrap_text(f"Description: {desc_text}", term_width - len(indent), indent)
+            click.secho(f"{indent}{wrapped_desc}", fg=color)
 
         # Display status and ISBN
         click.secho(f"{indent}Status: {status}", fg=get_status_color(status) if style == 'normal' else color)
@@ -358,10 +399,13 @@ def view(sort_status):
             click.secho("Library is empty! Add some books first.", fg='yellow')
             break
 
-        for idx, (book_id, title, author, isbn, publisher, year, edition, format_, language, pages, status) in enumerate(books, 1):
+        for idx, (book_id, title, author, isbn, publisher, year, edition, format_, language, pages, description, status) in enumerate(books, 1):
+            term_width = get_terminal_size().columns
+            indent = "   "
+
             click.secho(f"{idx}. ", nl=False)
-            click.secho(f"{title}", fg='bright_white', bold=True)
-            click.secho(f" by {author}", fg='white')
+            click.secho(wrap_text(title, term_width - len(f"{idx}. ")), fg='bright_white', bold=True)
+            click.secho(wrap_text(f" by {author}", term_width), fg='white')
 
             # Edition information
             edition_info = []
@@ -375,7 +419,8 @@ def view(sort_status):
                 edition_info.append(publisher)
 
             if edition_info:
-                click.secho(f"   {' • '.join(edition_info)}", fg='bright_black')
+                edition_str = " • ".join(edition_info)
+                click.secho(wrap_text(f"{indent}{edition_str}", term_width), fg='bright_black')
 
             # Additional details
             details = []
@@ -384,12 +429,18 @@ def view(sort_status):
             if language:
                 details.append(f"Lang: {language.upper()}")
             if details:
-                click.secho(f"   {' • '.join(details)}", fg='bright_black')
+                click.secho(f"{indent}{' • '.join(details)}", fg='bright_black')
+
+            # Description with wrapping
+            if description and description != 'NA':
+                desc_text = description[:300] + "..." if len(description) > 300 else description
+                wrapped_desc = wrap_text(f"Description: {desc_text}", term_width - len(indent), indent)
+                click.secho(f"{indent}{wrapped_desc}", fg='bright_black')
 
             # Status and ISBN
-            click.secho(f"   Status: ", nl=False)
+            click.secho(f"{indent}Status: ", nl=False)
             click.secho(f"{status.replace('_', ' ').title()}", fg=status_colors[status])
-            click.secho(f"   ISBN: {isbn}", fg='bright_black')
+            click.secho(f"{indent}ISBN: {isbn}", fg='bright_black')
             click.echo()
 
         click.echo("─" * 50)

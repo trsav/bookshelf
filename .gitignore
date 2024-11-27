@@ -1,3 +1,5 @@
 backup.db
 .env
 .DS_Store
+**/__pycache__/
+**/*.pkl
