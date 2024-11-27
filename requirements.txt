@@ -1,2 +1,9 @@
 requests==2.31.0
 click
+openai
+matplotlib
+scikit-learn
+python-dotenv
+seaborn
+adjustText
+pandas
