@@ -5,3 +5,4 @@
 .venv
 **/*.png
 embeddings/*.txt
+!path.png
