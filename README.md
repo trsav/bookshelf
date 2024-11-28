@@ -1,4 +1,4 @@
-# Optimal Bookshelf
+# `optimal-bookshelf`
 
 <p align="center">
 <img width="400" alt="bookshelf" src="https://github.com/user-attachments/assets/e034879b-be90-4f6a-b158-ec492f3ab8fd">
