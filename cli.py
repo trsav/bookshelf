@@ -4,6 +4,8 @@ import sqlite3
 import os
 from typing import List, Dict
 from datetime import datetime
+from utils.embed import create_embeddings
+from utils.tsp import visual_tsp, fullspace_tsp
 
 def get_terminal_size():
     try:
@@ -601,6 +603,38 @@ def edit():
     """Edit book details"""
     manager = BookManager()
     edit_book(manager)
+
+@cli.command()
+def embed():
+    """Create embeddings for all books in the library"""
+    create_embeddings()
+    click.secho("✅ Successfully created embeddings for all books", fg='green')
+
+# two options here, visual which returns an image, or fullspace which returns a list of books
+@cli.command()
+@click.option('--visual', '-v', is_flag=True, help='Create a visual TSP by first reducing the dimensionality of the embeddings')
+def tsp(visual):
+    """Solve the Travelling Salesman Problem for your library"""
+    try:
+        if visual:
+            tour,path = visual_tsp()
+            type_path = 'An image of the optimal book tour'
+            click.secho(f"Successfully solved the TSP for the library in the reduced 2D space", fg='green')
+        else:
+            tour,path = fullspace_tsp()
+            type_path = 'A list of books in the optimal tour'
+            click.secho(f"Successfully solved the TSP for the library in the full vector spaced", fg='green')
+    except:
+        click.secho("❌ Error solving TSP for the library", fg='red')
+        click.secho("Did you remember to create embeddings for all books?", fg='red')
+        return
+    
+    click.secho(f"{type_path} has been saved to: {path}", fg='blue')
+    # print all lines in tour
+    click.echo("----- OPTIMAL BOOKSHELF -------")
+    for line in tour:
+        click.echo(line)
+    
 
 @cli.command()
 def add():
