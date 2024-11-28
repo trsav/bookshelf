@@ -4,3 +4,4 @@
 **/*.pkl
 .venv
 **/*.png
+embeddings/*.txt

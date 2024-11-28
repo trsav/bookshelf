@@ -19,7 +19,10 @@ for i in range(len(embeddings)):
         distance_matrix[i][j] = np.linalg.norm(embeddings[i] - embeddings[j])
         distance_matrix[j][i] = distance_matrix[i][j]
 
-permutation, distance = solve_tsp_simulated_annealing(distance_matrix)
+distance_matrix[:, 0] = 0
+
+permutation, distance = solve_tsp_simulated_annealing(distance_matrix, max_processing_time=60)
+# permutation, distance = solve_tsp_dynamic_programming(distance_matrix)
 
 fig, ax = plot_embeddings_with_balanced_arrows(
     embeddings_df['x'],
@@ -28,11 +31,11 @@ fig, ax = plot_embeddings_with_balanced_arrows(
 )
 
 # plot tsp solution 
-for i in range(len(permutation)):
+for i in range(len(permutation)-1):
     first = i 
     second = i + 1
-    if second == len(permutation):
-        second = 0
+    # if second == len(permutation):
+    #     second = 0
 
     plt.plot(
         [embeddings_df['x'][permutation[first]], embeddings_df['x'][permutation[second]]],

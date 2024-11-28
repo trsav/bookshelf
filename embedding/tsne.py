@@ -39,9 +39,8 @@ for book in books:
     # delete the 'date_added' field
     book.pop('date_added')
     book_list.append(book)
-print(book_list)
 
-tsne = TSNE(n_components=2, perplexity=8, random_state=10, n_iter=10000)
+tsne = TSNE(n_components=2, perplexity=15, random_state=10, n_iter=10000)
 X = tsne.fit_transform(matrix)
 
 def plot_embeddings_with_balanced_arrows(x_coords, y_coords, labels, figsize=(11,8)):
