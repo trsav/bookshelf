@@ -484,55 +484,47 @@ def view(sort_status):
             click.secho("Status updated!", fg='green')
             click.pause(info='Press any key to continue...')
 
-
 def edit_book(manager, book_id=None):
-    """Core edit functionality separated from Click command"""
+    cursor = manager.conn.cursor()
     while True:
         if book_id is None:
             clear_screen()
             click.secho("📝 Edit Book Details", fg='green', bold=True)
             click.echo("─" * 50)
-            
-            # Get all books
-            books = manager.get_books()
+
+            cursor.execute("SELECT * FROM books")
+            books = cursor.fetchall()
             if not books:
                 click.secho("Library is empty!", fg='yellow')
                 return
 
-            # Display books
             for idx, book in enumerate(books, 1):
                 click.secho(f"{idx}. ", nl=False)
-                click.secho(f"{book[1]}", fg='bright_white', bold=True)  # title
-                click.secho(f" by {book[2]}", fg='white')  # author
+                click.secho(f"{book[1]}", fg='bright_white', bold=True)
+                click.secho(f" by {book[2]}", fg='white')
 
-            # Select book
             book_num = click.prompt(
                 "\nSelect book to edit (0 to exit)",
                 type=click.IntRange(0, len(books)),
                 default=0
             )
-            
+
             if book_num == 0:
                 return
-                
+
             selected_book = books[book_num-1]
         else:
-            # If book_id is provided, get that specific book
-            cursor = manager.conn.cursor()
-            cursor.execute('''
-                SELECT * FROM books WHERE id = ?
-            ''', (book_id,))
+            cursor.execute('SELECT * FROM books WHERE id = ?', (book_id,))
             selected_book = cursor.fetchone()
             if not selected_book:
                 click.secho("Book not found!", fg='red')
                 return
-        
-        while True:  # Inner loop for editing the same book
-            # Show editable fields
+
+        while True:
             clear_screen()
             click.secho(f"Editing: {selected_book[1]}", fg='blue', bold=True)
             click.echo("─" * 50)
-            
+
             fields = [
                 ('title', 'Title'),
                 ('author', 'Author'),
@@ -543,29 +535,30 @@ def edit_book(manager, book_id=None):
                 ('format', 'Format'),
                 ('language', 'Language'),
                 ('page_count', 'Page Count'),
+                ('description', 'Description'),
                 ('read_status', 'Read Status')
             ]
-            
-            # Display current values
+
             for idx, (field_name, field_label) in enumerate(fields, 1):
-                current_value = selected_book[fields.index((field_name, field_label))+1] or 'Not set'
+                field_index = [i for i, col in enumerate(cursor.description) if col[0] == field_name][0]
+                current_value = selected_book[field_index] or 'Not set'
+                if field_name == 'description' and len(str(current_value)) > 50:
+                    current_value = current_value[:50] + '...'
                 click.echo(f"{idx}. {field_label}: {current_value}")
 
-            # Select field to edit
             field_num = click.prompt(
                 "\nSelect field to edit (0 to go back)",
                 type=click.IntRange(0, len(fields)),
                 default=0
             )
-            
+
             if field_num == 0:
-                if book_id is not None:  # If we came from add command
+                if book_id is not None:
                     return
-                break  # Break inner loop to return to book selection
-                
+                break
+
             selected_field = fields[field_num-1]
-            
-            # Handle special cases for certain fields
+
             if selected_field[0] == 'read_status':
                 new_value = click.prompt(
                     "Enter new value",
@@ -585,25 +578,23 @@ def edit_book(manager, book_id=None):
                     default=selected_book[fields.index(selected_field)+1] or 0
                 )
             else:
+                current_index = [i for i, col in enumerate(cursor.description) if col[0] == selected_field[0]][0]
                 new_value = click.prompt(
                     "Enter new value",
-                    default=selected_book[fields.index(selected_field)+1] or ''
+                    default=selected_book[current_index] or ''
                 )
-            
-            # Update the field
+
             if manager.edit_book_field(selected_book[0], selected_field[0], new_value):
                 click.secho(f"\n✅ Successfully updated {selected_field[1]}", fg='green')
-                # Refresh selected_book data after update
-                cursor = manager.conn.cursor()
                 cursor.execute('SELECT * FROM books WHERE id = ?', (selected_book[0],))
                 selected_book = cursor.fetchone()
             else:
                 click.secho(f"\n❌ Failed to update {selected_field[1]}", fg='red')
-            
+
             if not click.confirm("\nEdit another field for this book?"):
-                if book_id is not None:  # If we came from add command
+                if book_id is not None:
                     return
-                break  # Break inner loop to return to book selection
+                break
 
 @cli.command()
 def edit():
