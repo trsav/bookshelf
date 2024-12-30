@@ -8,3 +8,5 @@ seaborn
 adjustText
 pandas
 python-tsp
+fastapi
+uvicorn
